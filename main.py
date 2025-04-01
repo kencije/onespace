@@ -36,7 +36,10 @@ sprite_skott = pygame.transform.scale(sprite_skott, (sprite_skott.get_width() //
 skott_lista = []
 
 sprite_bonus = pygame.image.load("assets/sprites/bonus_time.png")
-bonus_rect = sprite_bonus.get_rect(center=(-100, -100))
+bonus_rect = sprite_bonus.get_rect(center=(random.randint(0, SKÄRMENS_BREDD), random.randint(0, SKÄRMENS_HÖJD)))
+bonus_speed_x = random.choice([-2, 2])
+bonus_speed_y = random.choice([-2, 2])
+bonus_cooldown = 0  # Initialize cooldown timer
 
 sprite_medium = pygame.image.load("assets/sprites/medium-a.png")
 sprite_medium = pygame.transform.scale(sprite_medium, (sprite_medium.get_width() // 2, sprite_medium.get_height() // 2))
@@ -50,12 +53,14 @@ background_stjärnor = pygame.image.load("assets/backgrounds/stars-A.png")
 background_y = 0
 
 objekt_lista = []
+respawn_queue = []  # Queue to track destroyed asteroids and their respawn times
+
 for _ in range(5):
     while True:
         x = random.randint(0, SKÄRMENS_BREDD - sprite_medium.get_width())
         y = random.randint(0, SKÄRMENS_HÖJD - sprite_medium.get_height())
         new_rect = pygame.Rect(x, y, sprite_medium.get_width(), sprite_medium.get_height())
-        if not new_rect.colliderect(bonus_rect) and not any(new_rect.colliderect(obj["rect"]) for obj in objekt_lista):
+        if not new_rect.colliderect(bonus_rect):
             objekt_lista.append({"rect": new_rect, "type": "medium"})
             break
 
@@ -64,20 +69,32 @@ for _ in range(3):
         x = random.randint(0, SKÄRMENS_BREDD - sprite_small.get_width())
         y = random.randint(0, SKÄRMENS_HÖJD - sprite_small.get_height())
         new_rect = pygame.Rect(x, y, sprite_small.get_width(), sprite_small.get_height())
-        if not new_rect.colliderect(bonus_rect) and not any(new_rect.colliderect(obj["rect"]) for obj in objekt_lista):
+        if not new_rect.colliderect(bonus_rect):
             objekt_lista.append({"rect": new_rect, "type": "small"})
             break
 
 har_kritisk_träff = False
 kritisk_träff_tid = 0
-bonus_cooldown = 0
 
 def aktivera_kritisk_träff():
     global har_kritisk_träff, kritisk_träff_tid, bonus_cooldown
     har_kritisk_träff = True
     kritisk_träff_tid = time.time()
     intro_sound.play()
-    bonus_cooldown = time.time() + 10
+    bonus_cooldown = time.time() + 5  # Set cooldown for 5 seconds
+
+def respawn_asteroids():
+    current_time = time.time()
+    for asteroid in respawn_queue[:]:
+        if current_time >= asteroid["respawn_time"]:
+            x = random.randint(0, SKÄRMENS_BREDD - sprite_medium.get_width())
+            y = random.randint(0, SKÄRMENS_HÖJD - sprite_medium.get_height())
+            new_rect = pygame.Rect(x, y, sprite_medium.get_width(), sprite_medium.get_height())
+            if asteroid["type"] == "medium":
+                objekt_lista.append({"rect": new_rect, "type": "medium"})
+            elif asteroid["type"] == "small":
+                objekt_lista.append({"rect": new_rect, "type": "small"})
+            respawn_queue.remove(asteroid)
 
 spelet_körs = True
 while spelet_körs:
@@ -86,8 +103,8 @@ while spelet_körs:
             spelet_körs = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                if har_kritisk_träff and time.time() - kritisk_träff_tid < 5:
-                    for i in range(-3, 4):
+                if har_kritisk_träff and time.time() - kritisk_träff_tid < 10:
+                    for i in range(-2, 3):  # Spread bullets
                         skott_rect = pygame.Rect(
                             spelare_x + sprite_spelare.get_width() // 2 + i * 15,
                             spelare_y,
@@ -118,13 +135,20 @@ while spelet_körs:
 
     if sprite_spelare.get_rect(topleft=(spelare_x, spelare_y)).colliderect(bonus_rect):
         aktivera_kritisk_träff()
-        bonus_rect.topleft = (-100, -100)
+        bonus_rect.topleft = (-100, -100)  # Move off-screen
 
     if time.time() > bonus_cooldown and bonus_rect.topleft == (-100, -100):
-        while True:
-            bonus_rect.topleft = (random.randint(0, SKÄRMENS_BREDD), random.randint(0, SKÄRMENS_HÖJD))
-            if not any(bonus_rect.colliderect(obj["rect"]) for obj in objekt_lista):
-                break
+        bonus_rect.topleft = (random.randint(0, SKÄRMENS_BREDD), random.randint(0, SKÄRMENS_HÖJD))
+        bonus_speed_x = random.choice([-2, 2])
+        bonus_speed_y = random.choice([-2, 2])
+
+    bonus_rect.x += bonus_speed_x
+    bonus_rect.y += bonus_speed_y
+
+    if bonus_rect.left < 0 or bonus_rect.right > SKÄRMENS_BREDD:
+        bonus_speed_x *= -1
+    if bonus_rect.top < 0 or bonus_rect.bottom > SKÄRMENS_HÖJD:
+        bonus_speed_y *= -1
 
     background_y += 2
     if background_y >= SKÄRMENS_HÖJD:
@@ -135,7 +159,8 @@ while spelet_körs:
     skärm.blit(background_stjärnor, (0, background_y - SKÄRMENS_HÖJD))
 
     skärm.blit(sprite_spelare, (spelare_x, spelare_y))
-    skärm.blit(sprite_bonus, bonus_rect.topleft)
+    if bonus_rect.topleft != (-100, -100):  # Only draw bonus if it's visible
+        skärm.blit(sprite_bonus, bonus_rect.topleft)
 
     for obj in objekt_lista[:]:
         if obj["type"] == "medium":
@@ -150,17 +175,21 @@ while spelet_körs:
             if skott.colliderect(obj["rect"]):
                 skott_lista.remove(skott)
                 if obj["type"] == "medium":
+                    respawn_queue.append({"type": "medium", "respawn_time": time.time() + 3})
                     objekt_lista.remove(obj)
                     for _ in range(2):
                         x = obj["rect"].x + random.randint(-10, 10)
                         y = obj["rect"].y + random.randint(-10, 10)
                         objekt_lista.append({"rect": pygame.Rect(x, y, sprite_small.get_width(), sprite_small.get_height()), "type": "small"})
                 elif obj["type"] == "small":
+                    respawn_queue.append({"type": "small", "respawn_time": time.time() + 3})
                     objekt_lista.remove(obj)
                 break
         if skott.y < 0:
             skott_lista.remove(skott)
 
+    respawn_asteroids()
+
     pygame.display.update()
 
-pygame.quit()
+pygame.quit() 
