@@ -23,9 +23,8 @@ wahwahwah_sound = pygame.mixer.Sound("assets/sounds/wahwahwah.mp3")
 wahwahwah_sound.set_volume(0.5)
 
 critical_sound = pygame.mixer.Sound("assets/sounds/lets_go.mp3")
-critical_sound.set_volume(0.5)
+critical_sound.set_volume(0.3)
 
-# Add transformation music
 transformation_music = "assets/music/fullpower.mp3"
 
 sprite_spelare = pygame.image.load("assets/sprites/dababy.png")
@@ -40,7 +39,6 @@ sprite_critical = pygame.transform.scale(sprite_critical, (50, 50))
 boss_sprite = pygame.image.load("assets/sprites/kingvon.jpg")
 boss_sprite = pygame.transform.scale(boss_sprite, (400, 300))
 
-# Add final boss sprite
 final_boss_sprite = pygame.image.load("assets/sprites/finalvon.png")
 final_boss_sprite = pygame.transform.scale(final_boss_sprite, (400, 300))
 
@@ -74,7 +72,7 @@ critical_timer = 0
 
 boss_active = False
 boss_music_played = False
-boss_health = 100
+boss_health = 200
 boss_x = SKÄRMENS_BREDD // 2 - boss_sprite.get_width() // 2
 boss_y = -300
 boss_speed_x = 3
@@ -84,10 +82,9 @@ boss_can_take_damage = False
 boss_awoken_text_timer = 0
 boss_awoken_text_displayed = False
 
-# Add transformation variables
 final_boss_active = False
 transformation_timer = 0
-final_boss_health = 200  # Double health for the final form
+final_boss_health = 400
 
 def spawn_enemy():
     if random.random() < 0.6:
@@ -173,7 +170,6 @@ def restart_game():
     final_boss_active = False
     final_boss_health = 200
 
-    # Reset King Von's sprite
     boss_sprite = pygame.image.load("assets/sprites/kingvon.jpg")
     boss_sprite = pygame.transform.scale(boss_sprite, (400, 300))
 
@@ -310,7 +306,6 @@ while spelet_körs:
             final_boss_active = False
 
     if boss_visible and not final_boss_active and boss_health <= 0:
-        # Trigger the win screen only when finalvon.png is defeated
         game_over = True
         game_over_screen(win=True)
 
