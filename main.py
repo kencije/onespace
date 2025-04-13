@@ -72,7 +72,7 @@ critical_timer = 0
 
 boss_active = False
 boss_music_played = False
-boss_health = 200
+boss_health = 300
 boss_x = SKÄRMENS_BREDD // 2 - boss_sprite.get_width() // 2
 boss_y = -300
 boss_speed_x = 3
@@ -82,9 +82,7 @@ boss_can_take_damage = False
 boss_awoken_text_timer = 0
 boss_awoken_text_displayed = False
 
-final_boss_active = False
-transformation_timer = 0
-final_boss_health = 400
+transformed_to_final = False
 
 def spawn_enemy():
     if random.random() < 0.6:
@@ -115,7 +113,7 @@ def activate_boss_mode():
     global boss_active, objekt_lista, boss_music_played, boss_health, boss_y, boss_visible, boss_can_take_damage
     boss_active = True
     objekt_lista.clear()
-    boss_health = 100
+    boss_health = 300
     boss_y = -300
     boss_visible = False
     boss_can_take_damage = False
@@ -143,7 +141,7 @@ def draw_boss_health(health, max_health, y_offset=0):
 def game_over_screen(win):
     font = pygame.font.SysFont(None, 72)
     if win:
-        text = font.render("How did you beat him...?", True, (0, 255, 0))
+        text = font.render("Congratulations! You defeated King Von!", True, (0, 255, 0))
     else:
         text = font.render("lol you suck", True, (255, 0, 0))
     restart_text = font.render("Press 'R' to Restart", True, (255, 255, 255))
@@ -152,7 +150,7 @@ def game_over_screen(win):
     pygame.display.update()
 
 def restart_game():
-    global objekt_lista, player_score, spelare_x, spelare_y, game_over, player_dead, critical_rect, critical_active, boss_active, boss_music_played, boss_health, boss_y, boss_visible, boss_can_take_damage, final_boss_active, final_boss_health, boss_sprite
+    global objekt_lista, player_score, spelare_x, spelare_y, game_over, player_dead, critical_rect, critical_active, boss_active, boss_music_played, boss_health, boss_y, boss_visible, boss_can_take_damage, transformed_to_final, boss_sprite
     objekt_lista.clear()
     player_score = 0
     spelare_x = SKÄRMENS_BREDD // 2 - 120
@@ -163,13 +161,11 @@ def restart_game():
     critical_active = False
     boss_active = False
     boss_music_played = False
-    boss_health = 100
+    boss_health = 300
     boss_y = -300
     boss_visible = False
     boss_can_take_damage = False
-    final_boss_active = False
-    final_boss_health = 200
-
+    transformed_to_final = False
     boss_sprite = pygame.image.load("assets/sprites/kingvon.jpg")
     boss_sprite = pygame.transform.scale(boss_sprite, (400, 300))
 
@@ -267,47 +263,36 @@ while spelet_körs:
             player_dead = True
 
         if boss_visible:
-            draw_boss_health(boss_health, 100)
+            draw_boss_health(boss_health, 300 if not transformed_to_final else 500)
+
+        if boss_health <= 30 and not transformed_to_final:
+            boss_sprite = final_boss_sprite
+            boss_health = 500
+            transformed_to_final = True
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load(transformation_music)
+            pygame.mixer.music.play(-1)
 
         for skott in skott_lista[:]:
             skott.y -= 10
             skärm.blit(sprite_skott, skott)
             if boss_can_take_damage and skott.colliderect(boss_rect):
-                skott_lista.remove(skott)
+                try:
+                    skott_lista.remove(skott)
+                except ValueError:
+                    pass
                 boss_health -= 1
-                if boss_health <= 0 and not final_boss_active:
-                    boss_speed_x = 0
-                    boss_x = SKÄRMENS_BREDD // 2 - boss_sprite.get_width() // 2
+                if boss_health <= 0:
                     boss_visible = False
                     boss_can_take_damage = False
-
-                    transformation_timer = pygame.time.get_ticks()
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.load(transformation_music)
-                    pygame.mixer.music.play(-1)
-                    final_boss_active = True
+                    game_over = True
+                    game_over_screen(win=True)
 
             if skott.y < 0:
-                skott_lista.remove(skott)
-
-    if final_boss_active:
-        current_time = pygame.time.get_ticks()
-        if current_time - transformation_timer < 2000:
-            font = pygame.font.SysFont(None, 72)
-            transformation_text = font.render("You have made him mad...", True, (255, 0, 0))
-            skärm.blit(transformation_text, (SKÄRMENS_BREDD // 2 - transformation_text.get_width() // 2, SKÄRMENS_HÖJD // 2 - transformation_text.get_height() // 2))
-        elif current_time - transformation_timer >= 15000:
-            boss_sprite = final_boss_sprite
-            boss_visible = True
-            boss_can_take_damage = True
-            boss_health = final_boss_health
-            boss_speed_x = 3 
-            draw_boss_health(boss_health, final_boss_health, y_offset=20)
-            final_boss_active = False
-
-    if boss_visible and not final_boss_active and boss_health <= 0:
-        game_over = True
-        game_over_screen(win=True)
+                try:
+                    skott_lista.remove(skott)
+                except ValueError:
+                    pass
 
     spawn_critical()
 
@@ -356,7 +341,10 @@ while spelet_körs:
         skärm.blit(sprite_skott, skott)
         for obj in objekt_lista[:]:
             if skott.colliderect(obj["rect"]):
-                skott_lista.remove(skott)
+                try:
+                    skott_lista.remove(skott)
+                except ValueError:
+                    pass
                 if obj["type"] == "medium":
                     player_score += 20
                     objekt_lista.remove(obj)
@@ -369,9 +357,12 @@ while spelet_körs:
                     objekt_lista.remove(obj)
                 break
         if skott.y < 0:
-            skott_lista.remove(skott)
+            try:
+                skott_lista.remove(skott)
+            except ValueError:
+                pass
 
-    if player_score >= 100 and not boss_active:
+    if player_score >= 500 and not boss_active:
         activate_boss_mode()
 
     draw_score(player_score)
