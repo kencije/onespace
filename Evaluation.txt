@@ -1,0 +1,21 @@
+1. Vad gör det professionella spelet roligt att spela?
+I Galaga är det kul att fienderna kommer i mönster och vågor, och att man måste vara snabb för att överleva. Det känns alltid som att man vill slå sitt förra rekord, vilket motiverar en att fortsätta.
+I mitt spel Straightouttaspace försöker jag skapa samma känsla genom att använda en poängräknare, powerups som “critical mode”, och en bossfight som en överraskning. Det som gör Galaga roligt är att det går snabbt och är lätt att förstå, men svårt att bemästra – precis det jag vill förbättra ännu mer i mitt spel. Jag skulle kunna lägga till fler nivåer eller nya fiendetyper för att få variation, kanske använda fler funktioner eller loopar för att hantera olika vågor av fiender.
+
+2. Har båda spelen tydlig feedback när man träffar eller skjuter?
+I Galaga hörs ett tydligt skottljud och explosion när man träffar fienden – det ger direkt feedback.
+Mitt spel har också ljud – man hör ett "yeah!"-ljud när man skjuter, och explosioner när något träffas. Det finns också visuella effekter som explosion-sprites. Feedbacken gör att spelet känns levande och ger en känsla av att man påverkar världen. Jag skulle kunna förbättra feedbacken med fler animationer eller skärmblinkningar (typ flash när man träffas), kanske till och med en vibration eller ljudeffekt när man själv blir skadad. Det hade höjt spelupplevelsen och gjort det ännu mer responsivt.
+
+3. Hur ser menyer och gränssnitt (UI) ut i Galaga jämfört med ditt spel?
+Galaga har en enkel UI – bara poäng och "Lives" syns högst upp. Det är tydligt vad som är viktigt.
+Mitt spel har en poängvisare och en boss-livmätare som ritas upp när bossen syns, vilket är bra. Men jag har ingen riktig huvudmeny, inga knappar eller inställningar. För att göra mitt spel mer användarvänligt kan jag förbättra UI:t med till exempel en startmeny, pausfunktion och en "Game Over"-meny med statistik. Jag kan också använda fler funktioner för att hantera olika UI-delar för bättre struktur.
+
+4. Vad skulle du vilja ta med från Galaga till ditt eget spel?
+Jag gillar Galagas mönster i fiendernas rörelser – det känns som koreografi. De rör sig i former och attackerar tillsammans.
+Om jag implementerade det i mitt spel, med hjälp av till exempel listor med koordinater och loopar för att styra rörelser, skulle fienderna kännas mer levande och spelet skulle bli svårare och roligare. Jag skulle också vilja ha ett highscore-system som Galaga har – det ger motivation att spela igen.
+
+5. Finns det något ditt spel gör bättre än Galaga? Varför då?
+Ja, jag tycker mitt spel har bättre variation i ljud och grafik – jag använder olika sprites (t.ex. Tupac, DaBaby, King Von) och olika musik beroende på situation. Galaga har bara ett enda utseende och ljud.
+Mitt spel har också ett “critical mode” och en boss som transformeras – det känns modernt och unikt. Jag använder funktioner och logik för att hantera transformationen och olika spellägen. Det gör spelet mer filmiskt och dramatiskt än Galaga, som är mer repetitivt.
+
+
